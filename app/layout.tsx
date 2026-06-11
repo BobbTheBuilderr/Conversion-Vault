@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { SmoothScrollProvider } from '@/components/providers/smooth-scroll-provider'
 import './globals.css'
 
 /* ----------------------------------------------------------------------------
@@ -29,7 +30,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+      </body>
     </html>
   )
 }

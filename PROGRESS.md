@@ -74,7 +74,58 @@ R3F. We get the architecture without inheriting the boilerplate.
 
 ---
 
-## Phase 1 — Scroll & render core ⏳ (next)
+## Phase 1 — Scroll & render core ✅
 
-Planned: Lenis + tempus single rAF loop, GSAP plugin registration,
-`prefers-reduced-motion` gate hook. Awaiting Phase 0 review.
+Unified render loop wired: **one rAF** drives Lenis + GSAP + R3F.
+
+### How the single loop works (verified against installed dev-tag APIs)
+
+- `<ReactTempus patch />` calls `Tempus.patch()`, which replaces
+  `window.requestAnimationFrame`. Every rAF consumer — GSAP's ticker, the R3F
+  canvas loop (Phase 4) — now flows through tempus's one real rAF.
+- `<ReactLenis root options={{ autoRaf:false, … }}>` installs smooth scroll on
+  the document and exposes `useLenis`. `autoRaf:false` means Lenis runs **no**
+  loop of its own.
+- `RafDriver` (inside ReactLenis) advances Lenis from the tempus tick via
+  `useTempus((time) => lenis.raf(time), { priority: 0 })`. tempus passes a
+  monotonic elapsed-ms clock — exactly what `lenis.raf` wants (confirmed by
+  reading `node_modules/tempus/dist/tempus.mjs`).
+- On every Lenis scroll → `ScrollTrigger.update()`; on mount/instance change →
+  `ScrollTrigger.refresh()`.
+
+### Files
+
+- `lib/animations/gsap.ts` — single GSAP registration point (ScrollTrigger,
+  SplitText, Flip, DrawSVGPlugin), SSR-guarded, `lagSmoothing(0)`, global
+  defaults mapped to CSS motion tokens.
+- `lib/hooks/use-reduced-motion.ts` — SSR-safe live `prefers-reduced-motion`.
+- `lib/scroll/lenis-options.ts` — shared Lenis options (smoothing gated by
+  reduced motion → native scroll fallback).
+- `components/providers/raf-driver.tsx` — the unified-loop driver.
+- `components/providers/smooth-scroll-provider.tsx` — composes the above.
+- `app/layout.tsx` wraps children in `SmoothScrollProvider`.
+- `app/page.tsx` — temporary 4-block scroll-test harness (removed when real
+  sections land).
+
+### Verified
+
+- `npm run typecheck` → exit 0 · `npm run build` → ✓
+- `npm run dev` → `GET /` 200; all sections present in SSR HTML; **no**
+  hydration/error/warn lines in the dev log.
+
+### Confirmed-against-installed-source (dev-tag APIs)
+
+- `tempus@1.0.0-dev.17`: `Tempus.add(cb,{priority,fps,…})`, `patch()/unpatch()`,
+  `useTempus`, `ReactTempus({patch})`. Callback signature `(time, deltaTime,
+  frameCount)`; `time` is elapsed ms from an internal clock.
+- `lenis@1.3.23` react binding: `ReactLenis` (prop `root`, `options`, ref),
+  `useLenis(cb?, deps?, priority?)`. `options.autoRaf` is the supported way to
+  disable the internal loop (`autoRaf` prop is deprecated).
+- GSAP plugin subpaths resolve: `gsap/ScrollTrigger`, `gsap/SplitText`,
+  `gsap/Flip`, `gsap/DrawSVGPlugin` (file is `DrawSVGPlugin.js`).
+
+---
+
+## Phase 2 — Preloader + custom cursor + magnetic button ⏳ (next)
+
+Awaiting Phase 1 review.
