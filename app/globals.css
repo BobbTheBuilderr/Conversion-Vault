@@ -1,0 +1,144 @@
+@import 'tailwindcss';
+
+/* ============================================================================
+   A FRAME AHEAD — GLOBAL DESIGN TOKENS
+   Tailwind v4 reads design tokens from @theme. Every value below is exposed
+   both as a CSS custom property (var(--color-bg)) and as Tailwind utilities
+   (bg-bg, text-fg, text-accent, font-display, etc.).
+   SWAP THE ACCENT: change --color-accent in one place to re-skin the site.
+   ========================================================================= */
+@theme {
+  /* Palette — near-black canvas, warm off-white ink, single accent */
+  --color-bg: #0a0a0a;
+  --color-fg: #f2f0eb;
+  --color-muted: #8a8a85; /* dimmed text / captions */
+  --color-line: #1e1e1c; /* hairline borders */
+  --color-accent: #e8503a; /* <-- single swappable accent */
+  --color-accent-ink: #0a0a0a; /* text that sits ON the accent */
+
+  /* Typography — display (grotesque/serif) + clean sans body.
+     Real font files get swapped in via next/font in app/layout.tsx;
+     these stacks are the SSR-safe fallbacks. */
+  --font-display: var(--font-display-face), 'Times New Roman', serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid type scale — clamp(min, preferred, max) for editorial rhythm */
+  --text-display: clamp(3rem, 9vw, 9.5rem);
+  --text-h1: clamp(2.5rem, 6vw, 6rem);
+  --text-h2: clamp(2rem, 4.5vw, 4rem);
+  --text-h3: clamp(1.5rem, 2.5vw, 2.25rem);
+  --text-lead: clamp(1.125rem, 1.6vw, 1.5rem);
+
+  /* Motion — shared easing + durations so timings are tunable in one place */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --dur-fast: 0.4s;
+  --dur-base: 0.8s;
+  --dur-slow: 1.2s;
+
+  /* Layout */
+  --container-max: 90rem;
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+}
+
+/* ---------------------------------------------------------------------------
+   Base reset / element defaults
+   ------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Lenis drives scrolling in JS; keep native smooth off to avoid conflicts. */
+  scroll-behavior: auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Lenis recommended styles (smooth scroll). When .lenis is on <html>,
+   the library manages the scroll position. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* Hide native cursor where the custom cursor is active (desktop, fine pointer).
+   Toggled by a root class so touch devices keep their default behavior. */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none;
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+img,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   prefers-reduced-motion — global safety net.
+   JS guards (lib/animations) are the primary mechanism; this CSS rule is the
+   belt-and-suspenders fallback so nothing animates if JS is mid-load.
+   ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visually-hidden utility for a11y labels */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
